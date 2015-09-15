@@ -3,10 +3,9 @@ using System.Data;
 using System.Net;
 using System.Threading.Tasks;
 using System.Web.Http;
-using Common.ApiControllers;
 using Common.Extensions;
 using Common.Facades.Contract;
-using Common.Models.Filters;
+using Common.Filters;
 
 namespace Common.MVC.ApiControllers
 {
@@ -17,12 +16,12 @@ namespace Common.MVC.ApiControllers
 #if (!DEBUG)
     [Authorize]
 #endif
-    public class RESTfulApiController<TEntity, TFilter, TFacade> : ReadApiController<TEntity, TFilter, TFacade>
+    public class EditApiController<TEntity, TFilter, TFacade> : ReadApiController<TEntity, TFilter, TFacade>
         where TEntity : class
         where TFilter : BaseFilter
         where TFacade : IFacade<TEntity, TFilter>
     {
-        public RESTfulApiController(Lazy<TFacade> facade)
+        public EditApiController(Lazy<TFacade> facade)
             : base(facade)
         {
         }

@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using System.Web.Http;
 using Common.Facades.Contract;
-using Common.Models.Filters;
+using Common.Filters;
 
-namespace Common.ApiControllers
+namespace Common.MVC.ApiControllers
 {
     /// <summary>
     /// Базовый API контроллер чтения
