@@ -4,7 +4,7 @@ using System.Web.Http;
 using Common.Facades.Contract;
 using Common.Filters;
 
-namespace Common.MVC.ApiControllers
+namespace Common.MVC.ApiControllers.Facade
 {
     /// <summary>
     /// Базовый API контроллер чтения
