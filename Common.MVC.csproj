@@ -33,7 +33,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\Common.1.0.0-CI00008\lib\net46\Common.dll</HintPath>
+      <HintPath>packages\Common.1.0.0-CI00009\lib\net46\Common.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Owin, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -101,11 +101,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ApiControllers\Service\ServiceEditApiController.cs" />
+    <Compile Include="ApiControllers\Service\ServiceRESTfulApiController.cs" />
     <Compile Include="ApiControllers\Service\ServiceReadApiController.cs" />
-    <Compile Include="ApiControllers\Repository\RepositoryEditApiController.cs" />
+    <Compile Include="ApiControllers\Repository\RepositoryRESTfulApiController.cs" />
     <Compile Include="ApiControllers\Repository\RepositoryReadApiController.cs" />
-    <Compile Include="ApiControllers\Facade\FacadeEditApiController.cs" />
+    <Compile Include="ApiControllers\Facade\FacadeRESTfulApiController.cs" />
     <Compile Include="ApiControllers\FileSystemApiController.cs" />
     <Compile Include="ApiControllers\Facade\FacadeReadApiController.cs" />
     <Compile Include="HttpActionResults\ResponseFile.cs" />

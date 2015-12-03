@@ -2,34 +2,34 @@
 using System.Threading.Tasks;
 using System.Web.Http;
 using Common.Filters;
-using Common.Repositories.Contract;
+using Common.Services.Contract;
 
 namespace Common.MVC.ApiControllers.Service
 {
     /// <summary>
     /// Базовый API контроллер чтения
     /// </summary>
-    public class ServiceReadApiController<TEntity, TFilter, TReadRepository> : ApiController
+    public class ServiceReadApiController<TEntity, TFilter, TReadService> : ApiController
         where TEntity : class
         where TFilter : BaseFilter
-        where TReadRepository : IReadRepository<TEntity, TFilter>
+        where TReadService : IReadService<TEntity, TFilter>
     {
         /// <summary>
         /// Разделитель составного первичного ключа
         /// </summary>
         protected const char KeySplitter = '-';
 
-        private readonly Lazy<TReadRepository> _read;
+        private readonly Lazy<TReadService> _read;
 
         /// <summary>
         /// Конструктор базового API контроллера
         /// </summary>
-        public ServiceReadApiController(Lazy<TReadRepository> read)
+        public ServiceReadApiController(Lazy<TReadService> read)
         {
             _read = read;
         }
 
-        protected TReadRepository read
+        protected TReadService read
         {
             get { return _read.Value; }
         }

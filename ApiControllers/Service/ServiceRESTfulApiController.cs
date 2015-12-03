@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Common.Extensions;
+using Common.Filters;
 using Common.Services.Contract;
 
 namespace Common.MVC.ApiControllers.Service
@@ -12,9 +13,10 @@ namespace Common.MVC.ApiControllers.Service
     /// Базовый API контроллер редактирования.
     /// Полная поддержка RESTful
     /// </summary> 
-    public class ServiceEditApiController<TEntity, TFilter, TReadService, TEditService> : ApiController
+    public class ServiceRESTfulApiController<TEntity, TFilter, TReadService, TEditService> :
+        ServiceReadApiController<TEntity, TFilter, TReadService>
         where TEntity : class
-        where TFilter : class
+        where TFilter : BaseFilter
         where TReadService : IReadService<TEntity, TFilter>
         where TEditService : IEditService<TEntity>
     {
@@ -27,8 +29,8 @@ namespace Common.MVC.ApiControllers.Service
         private readonly Lazy<TReadService> _read;
         private readonly Lazy<ITransactionService> _transaction;
 
-        public ServiceEditApiController(Lazy<TReadService> read, Lazy<TEditService> edit,
-            Lazy<ITransactionService> transaction)
+        public ServiceRESTfulApiController(Lazy<TReadService> read, Lazy<TEditService> edit,
+            Lazy<ITransactionService> transaction) : base(read)
         {
             _read = read;
             _edit = edit;

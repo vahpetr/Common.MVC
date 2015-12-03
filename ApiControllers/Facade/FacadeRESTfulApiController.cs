@@ -4,43 +4,23 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Common.Extensions;
+using Common.Facades.Contract;
 using Common.Filters;
-using Common.Repositories.Contract;
 
-namespace Common.MVC.ApiControllers.Repository
+namespace Common.MVC.ApiControllers.Facade
 {
     /// <summary>
     /// Базовый API контроллер редактирования.
     /// Полная поддержка RESTful
     /// </summary> 
-    public class RepositoryEditApiController<TEntity, TFilter, TReadRepository, TEditRepository> : ApiController
+    public class FacadeRESTfulApiController<TEntity, TFilter, TFacade> : FacadeReadApiController<TEntity, TFilter, TFacade>
         where TEntity : class
         where TFilter : BaseFilter
-        where TReadRepository : IReadRepository<TEntity, TFilter>
-        where TEditRepository : IEditRepository<TEntity>
+        where TFacade : IFacade<TEntity, TFilter>
     {
-        /// <summary>
-        /// Разделитель составного первичного ключа
-        /// </summary>
-        protected const char KeySplitter = '-';
-
-        private readonly Lazy<TEditRepository> _edit;
-        private readonly Lazy<TReadRepository> _read;
-
-        public RepositoryEditApiController(Lazy<TReadRepository> read, Lazy<TEditRepository> edit)
+        public FacadeRESTfulApiController(Lazy<TFacade> facade)
+            : base(facade)
         {
-            _read = read;
-            _edit = edit;
-        }
-
-        protected TReadRepository read
-        {
-            get { return _read.Value; }
-        }
-
-        protected TEditRepository edit
-        {
-            get { return _edit.Value; }
         }
 
         /// <summary>
@@ -53,11 +33,7 @@ namespace Common.MVC.ApiControllers.Repository
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            await Task.Run(() =>
-            {
-                edit.Add(entity);
-                edit.SaveChanges();
-            });
+            await facade.Value.Add(entity);
 
             var key = entity.GetKey();
             var id = string.Join(KeySplitter.ToString(), key);
@@ -79,20 +55,16 @@ namespace Common.MVC.ApiControllers.Repository
             if (!Equals(id, string.Join(KeySplitter.ToString(), key))) return BadRequest();
 
             // ReSharper disable once CoVariantArrayConversion
-            var exist = await read.ExistAsync(key);
-            if (!exist) return NotFound();
+            var dbEntity = await facade.Value.Get(key);
+            if (dbEntity == null) return NotFound();
 
             try
             {
-                await Task.Run(() =>
-                {
-                    edit.Update(entity);
-                    edit.SaveChanges();
-                });
+                await facade.Value.Update(entity, dbEntity);
             }
             catch (DBConcurrencyException) //DbUpdateConcurrencyException
             {
-                return Content(HttpStatusCode.Conflict, exist);
+                return Content(HttpStatusCode.Conflict, dbEntity);
             }
 
             return Ok(entity);
@@ -108,14 +80,10 @@ namespace Common.MVC.ApiControllers.Repository
         {
             // ReSharper disable once CoVariantArrayConversion
             object[] key = id.Split(KeySplitter);
-            var exist = await read.ExistAsync(key);
-            if (!exist) return NotFound();
+            var dbEntity = await facade.Value.Get(key);
+            if (dbEntity == null) return NotFound();
 
-            await Task.Run(() =>
-            {
-                edit.Remove(key);
-                edit.SaveChanges();
-            });
+            await facade.Value.Remove(dbEntity);
 
             return StatusCode(HttpStatusCode.NoContent);
         }
