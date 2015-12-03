@@ -101,13 +101,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ApiControllers\Repository\EditApiController.cs" />
-    <Compile Include="ApiControllers\Repository\ReadApiController.cs" />
-    <Compile Include="ApiControllers\Service\EditApiController.cs" />
-    <Compile Include="ApiControllers\Service\ReadApiController.cs" />
-    <Compile Include="ApiControllers\Facade\EditApiController.cs" />
+    <Compile Include="ApiControllers\Service\ServiceEditApiController.cs" />
+    <Compile Include="ApiControllers\Service\ServiceReadApiController.cs" />
+    <Compile Include="ApiControllers\Repository\RepositoryEditApiController.cs" />
+    <Compile Include="ApiControllers\Repository\RepositoryReadApiController.cs" />
+    <Compile Include="ApiControllers\Facade\FacadeEditApiController.cs" />
     <Compile Include="ApiControllers\FileSystemApiController.cs" />
-    <Compile Include="ApiControllers\Facade\ReadApiController.cs" />
+    <Compile Include="ApiControllers\Facade\FacadeReadApiController.cs" />
     <Compile Include="HttpActionResults\ResponseFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\DiskMultipartFormDataStreamOneFileProvider.cs" />
