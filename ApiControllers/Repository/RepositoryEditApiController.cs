@@ -19,18 +19,28 @@ namespace Common.MVC.ApiControllers.Repository
         where TReadRepository : IReadRepository<TEntity, TFilter>
         where TEditRepository : IEditRepository<TEntity>
     {
-        private readonly Lazy<TReadRepository> read;
-        private readonly Lazy<TEditRepository> edit;
-
         /// <summary>
         /// Разделитель составного первичного ключа
         /// </summary>
-        public const char KeySplitter = '-';
+        protected const char KeySplitter = '-';
+
+        private readonly Lazy<TEditRepository> _edit;
+        private readonly Lazy<TReadRepository> _read;
 
         public RepositoryEditApiController(Lazy<TReadRepository> read, Lazy<TEditRepository> edit)
         {
-            this.read = read;
-            this.edit = edit;
+            _read = read;
+            _edit = edit;
+        }
+
+        protected TReadRepository read
+        {
+            get { return _read.Value; }
+        }
+
+        protected TEditRepository edit
+        {
+            get { return _edit.Value; }
         }
 
         /// <summary>
@@ -45,8 +55,8 @@ namespace Common.MVC.ApiControllers.Repository
 
             await Task.Run(() =>
             {
-                edit.Value.Add(entity);
-                edit.Value.SaveChanges();
+                edit.Add(entity);
+                edit.SaveChanges();
             });
 
             var key = entity.GetKey();
@@ -69,18 +79,18 @@ namespace Common.MVC.ApiControllers.Repository
             if (!Equals(id, string.Join(KeySplitter.ToString(), key))) return BadRequest();
 
             // ReSharper disable once CoVariantArrayConversion
-            var exist = await read.Value.ExistAsync(key);
+            var exist = await read.ExistAsync(key);
             if (!exist) return NotFound();
 
             try
             {
                 await Task.Run(() =>
                 {
-                    edit.Value.Update(entity);
-                    edit.Value.SaveChanges();
+                    edit.Update(entity);
+                    edit.SaveChanges();
                 });
             }
-            catch (DBConcurrencyException)//DbUpdateConcurrencyException
+            catch (DBConcurrencyException) //DbUpdateConcurrencyException
             {
                 return Content(HttpStatusCode.Conflict, exist);
             }
@@ -98,13 +108,13 @@ namespace Common.MVC.ApiControllers.Repository
         {
             // ReSharper disable once CoVariantArrayConversion
             object[] key = id.Split(KeySplitter);
-            var exist = await read.Value.ExistAsync(key);
+            var exist = await read.ExistAsync(key);
             if (!exist) return NotFound();
 
             await Task.Run(() =>
             {
-                edit.Value.Remove(key);
-                edit.Value.SaveChanges();
+                edit.Remove(key);
+                edit.SaveChanges();
             });
 
             return StatusCode(HttpStatusCode.NoContent);

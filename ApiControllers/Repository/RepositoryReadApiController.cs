@@ -14,19 +14,24 @@ namespace Common.MVC.ApiControllers.Repository
         where TFilter : BaseFilter
         where TReadService : IReadService<TEntity, TFilter>
     {
-        protected readonly Lazy<TReadService> service;
-
         /// <summary>
         /// Разделитель составного первичного ключа
         /// </summary>
-        public const char KeySplitter = '-';
+        protected const char KeySplitter = '-';
+
+        private readonly Lazy<TReadService> _read;
 
         /// <summary>
         /// Конструктор базового API контроллера
         /// </summary>
-        public RepositoryReadApiController(Lazy<TReadService> service)
+        public RepositoryReadApiController(Lazy<TReadService> read)
         {
-            this.service = service;
+            _read = read;
+        }
+
+        protected TReadService read
+        {
+            get { return _read.Value; }
         }
 
         /// <summary>
@@ -37,7 +42,7 @@ namespace Common.MVC.ApiControllers.Repository
         [HttpGet, Route]
         public async Task<IHttpActionResult> Get([FromUri] TFilter filter)
         {
-            var result = await service.Value.GetAsync(filter);
+            var result = await read.GetAsync(filter);
             return Ok(result);
         }
 
@@ -51,7 +56,7 @@ namespace Common.MVC.ApiControllers.Repository
         {
             // ReSharper disable once CoVariantArrayConversion
             object[] key = id.Split(KeySplitter);
-            var dbEntity = await service.Value.GetAsync(key);
+            var dbEntity = await read.GetAsync(key);
             if (dbEntity == null) return NotFound();
             return Ok(dbEntity);
         }
@@ -64,7 +69,7 @@ namespace Common.MVC.ApiControllers.Repository
         [HttpGet, Route("exist")]
         public async Task<IHttpActionResult> Exist([FromUri] TFilter filter)
         {
-            var exist = await service.Value.ExistAsync(filter);
+            var exist = await read.ExistAsync(filter);
             return Ok(exist);
         }
 
@@ -76,7 +81,7 @@ namespace Common.MVC.ApiControllers.Repository
         [HttpGet, Route("count")]
         public async Task<IHttpActionResult> Count([FromUri] TFilter filter)
         {
-            var count = await service.Value.CountAsync(filter);
+            var count = await read.CountAsync(filter);
             return Ok(count);
         }
     }

@@ -62,7 +62,7 @@ namespace Common.MVC.ApiControllers.Facade
             {
                 await facade.Value.Update(entity, dbEntity);
             }
-            catch (DBConcurrencyException)//DbUpdateConcurrencyException
+            catch (DBConcurrencyException) //DbUpdateConcurrencyException
             {
                 return Content(HttpStatusCode.Conflict, dbEntity);
             }

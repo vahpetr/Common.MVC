@@ -14,12 +14,12 @@ namespace Common.MVC.ApiControllers.Facade
         where TFilter : BaseFilter
         where TFacade : IFacade<TEntity, TFilter>
     {
-        protected readonly Lazy<TFacade> facade;
-
         /// <summary>
         /// Разделитель составного первичного ключа
         /// </summary>
         public const char KeySplitter = '-';
+
+        protected readonly Lazy<TFacade> facade;
 
         /// <summary>
         /// Конструктор базового API контроллера

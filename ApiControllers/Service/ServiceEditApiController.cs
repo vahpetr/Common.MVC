@@ -18,20 +18,36 @@ namespace Common.MVC.ApiControllers.Service
         where TReadService : IReadService<TEntity, TFilter>
         where TEditService : IEditService<TEntity>
     {
-        private readonly Lazy<TReadService> read;
-        protected readonly Lazy<TEditService> edit;
-        private readonly Lazy<ITransactionService> transaction;
-
         /// <summary>
         /// Разделитель составного первичного ключа
         /// </summary>
-        public const char KeySplitter = '-';
+        protected const char KeySplitter = '-';
 
-        public ServiceEditApiController(Lazy<TReadService> read, Lazy<TEditService> edit, Lazy<ITransactionService> transaction)
+        private readonly Lazy<TEditService> _edit;
+        private readonly Lazy<TReadService> _read;
+        private readonly Lazy<ITransactionService> _transaction;
+
+        public ServiceEditApiController(Lazy<TReadService> read, Lazy<TEditService> edit,
+            Lazy<ITransactionService> transaction)
         {
-            this.read = read;
-            this.edit = edit;
-            this.transaction = transaction;
+            _read = read;
+            _edit = edit;
+            _transaction = transaction;
+        }
+
+        protected TReadService read
+        {
+            get { return _read.Value; }
+        }
+
+        protected TEditService edit
+        {
+            get { return _edit.Value; }
+        }
+
+        protected ITransactionService transaction
+        {
+            get { return _transaction.Value; }
         }
 
         /// <summary>
@@ -44,15 +60,15 @@ namespace Common.MVC.ApiControllers.Service
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            transaction.Value.Begin();
+            transaction.Begin();
 
             await Task.Run(() =>
             {
-                edit.Value.Add(entity);
-                edit.Value.Commit();
+                edit.Add(entity);
+                edit.Commit();
             });
 
-            transaction.Value.Complete();
+            transaction.Complete();
 
             var key = entity.GetKey();
             var id = string.Join(KeySplitter.ToString(), key);
@@ -74,22 +90,22 @@ namespace Common.MVC.ApiControllers.Service
             if (!Equals(id, string.Join(KeySplitter.ToString(), key))) return BadRequest();
 
             // ReSharper disable once CoVariantArrayConversion
-            var dbEntity = await read.Value.GetAsync(key);
+            var dbEntity = await read.GetAsync(key);
             if (dbEntity == null) return NotFound();
 
             try
             {
-                transaction.Value.Begin();
+                transaction.Begin();
 
                 await Task.Run(() =>
                 {
-                    edit.Value.Update(entity, dbEntity);
-                    edit.Value.Commit();
+                    edit.Update(entity, dbEntity);
+                    edit.Commit();
                 });
 
-                transaction.Value.Complete();
+                transaction.Complete();
             }
-            catch (DBConcurrencyException)//DbUpdateConcurrencyException
+            catch (DBConcurrencyException) //DbUpdateConcurrencyException
             {
                 return Content(HttpStatusCode.Conflict, dbEntity);
             }
@@ -107,18 +123,18 @@ namespace Common.MVC.ApiControllers.Service
         {
             // ReSharper disable once CoVariantArrayConversion
             object[] key = id.Split(KeySplitter);
-            var dbEntity = await read.Value.GetAsync(key);
+            var dbEntity = await read.GetAsync(key);
             if (dbEntity == null) return NotFound();
 
-            transaction.Value.Begin();
+            transaction.Begin();
 
             await Task.Run(() =>
             {
-                edit.Value.Remove(dbEntity);
-                edit.Value.Commit();
+                edit.Remove(dbEntity);
+                edit.Commit();
             });
 
-            transaction.Value.Complete();
+            transaction.Complete();
 
             return StatusCode(HttpStatusCode.NoContent);
         }
