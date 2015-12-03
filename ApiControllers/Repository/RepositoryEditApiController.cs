@@ -7,16 +7,13 @@ using Common.Extensions;
 using Common.Filters;
 using Common.Repositories.Contract;
 
-namespace Common.MVC.ApiControllers.Service
+namespace Common.MVC.ApiControllers.Repository
 {
     /// <summary>
     /// Базовый API контроллер редактирования.
     /// Полная поддержка RESTful
     /// </summary> 
-#if (!DEBUG)
-    [Authorize]
-#endif
-    public class EditApiController<TEntity, TFilter, TReadRepository, TEditRepository> : ApiController
+    public class RepositoryEditApiController<TEntity, TFilter, TReadRepository, TEditRepository> : ApiController
         where TEntity : class
         where TFilter : BaseFilter
         where TReadRepository : IReadRepository<TEntity, TFilter>
@@ -30,7 +27,7 @@ namespace Common.MVC.ApiControllers.Service
         /// </summary>
         public const char KeySplitter = '-';
 
-        public EditApiController(Lazy<TReadRepository> read, Lazy<TEditRepository> edit)
+        public RepositoryEditApiController(Lazy<TReadRepository> read, Lazy<TEditRepository> edit)
         {
             this.read = read;
             this.edit = edit;

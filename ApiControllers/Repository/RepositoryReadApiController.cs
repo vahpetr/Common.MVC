@@ -2,22 +2,19 @@
 using System.Threading.Tasks;
 using System.Web.Http;
 using Common.Filters;
-using Common.Repositories.Contract;
+using Common.Services.Contract;
 
 namespace Common.MVC.ApiControllers.Repository
 {
     /// <summary>
     /// Базовый API контроллер чтения
     /// </summary>
-#if (!DEBUG)
-    [Authorize]
-#endif
-    public class ReadApiController<TEntity, TFilter, TReadRepository> : ApiController
+    public class RepositoryReadApiController<TEntity, TFilter, TReadService> : ApiController
         where TEntity : class
         where TFilter : BaseFilter
-        where TReadRepository : IReadRepository<TEntity, TFilter>
+        where TReadService : IReadService<TEntity, TFilter>
     {
-        protected readonly Lazy<TReadRepository> repository;
+        protected readonly Lazy<TReadService> service;
 
         /// <summary>
         /// Разделитель составного первичного ключа
@@ -27,9 +24,9 @@ namespace Common.MVC.ApiControllers.Repository
         /// <summary>
         /// Конструктор базового API контроллера
         /// </summary>
-        public ReadApiController(Lazy<TReadRepository> repository)
+        public RepositoryReadApiController(Lazy<TReadService> service)
         {
-            this.repository = repository;
+            this.service = service;
         }
 
         /// <summary>
@@ -40,7 +37,7 @@ namespace Common.MVC.ApiControllers.Repository
         [HttpGet, Route]
         public async Task<IHttpActionResult> Get([FromUri] TFilter filter)
         {
-            var result = await repository.Value.GetAsync(filter);
+            var result = await service.Value.GetAsync(filter);
             return Ok(result);
         }
 
@@ -54,7 +51,7 @@ namespace Common.MVC.ApiControllers.Repository
         {
             // ReSharper disable once CoVariantArrayConversion
             object[] key = id.Split(KeySplitter);
-            var dbEntity = await repository.Value.GetAsync(key);
+            var dbEntity = await service.Value.GetAsync(key);
             if (dbEntity == null) return NotFound();
             return Ok(dbEntity);
         }
@@ -67,7 +64,7 @@ namespace Common.MVC.ApiControllers.Repository
         [HttpGet, Route("exist")]
         public async Task<IHttpActionResult> Exist([FromUri] TFilter filter)
         {
-            var exist = await repository.Value.ExistAsync(filter);
+            var exist = await service.Value.ExistAsync(filter);
             return Ok(exist);
         }
 
@@ -79,7 +76,7 @@ namespace Common.MVC.ApiControllers.Repository
         [HttpGet, Route("count")]
         public async Task<IHttpActionResult> Count([FromUri] TFilter filter)
         {
-            var count = await repository.Value.CountAsync(filter);
+            var count = await service.Value.CountAsync(filter);
             return Ok(count);
         }
     }

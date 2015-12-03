@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Common.Facades.Contract;
 using Common.Filters;
-using Common.Services.Contract;
 
-namespace Common.MVC.ApiControllers.Service
+namespace Common.MVC.ApiControllers.Facade
 {
     /// <summary>
     /// Базовый API контроллер чтения
     /// </summary>
-#if (!DEBUG)
-    [Authorize]
-#endif
-    public class ReadApiController<TEntity, TFilter, TReadService> : ApiController
+    public class FacadeReadApiController<TEntity, TFilter, TFacade> : ApiController
         where TEntity : class
         where TFilter : BaseFilter
-        where TReadService : IReadService<TEntity, TFilter>
+        where TFacade : IFacade<TEntity, TFilter>
     {
-        protected readonly Lazy<TReadService> service;
+        protected readonly Lazy<TFacade> facade;
 
         /// <summary>
         /// Разделитель составного первичного ключа
@@ -27,9 +24,9 @@ namespace Common.MVC.ApiControllers.Service
         /// <summary>
         /// Конструктор базового API контроллера
         /// </summary>
-        public ReadApiController(Lazy<TReadService> service)
+        public FacadeReadApiController(Lazy<TFacade> facade)
         {
-            this.service = service;
+            this.facade = facade;
         }
 
         /// <summary>
@@ -40,7 +37,7 @@ namespace Common.MVC.ApiControllers.Service
         [HttpGet, Route]
         public async Task<IHttpActionResult> Get([FromUri] TFilter filter)
         {
-            var result = await service.Value.GetAsync(filter);
+            var result = await facade.Value.Get(filter);
             return Ok(result);
         }
 
@@ -54,7 +51,7 @@ namespace Common.MVC.ApiControllers.Service
         {
             // ReSharper disable once CoVariantArrayConversion
             object[] key = id.Split(KeySplitter);
-            var dbEntity = await service.Value.GetAsync(key);
+            var dbEntity = await facade.Value.Get(key);
             if (dbEntity == null) return NotFound();
             return Ok(dbEntity);
         }
@@ -67,7 +64,7 @@ namespace Common.MVC.ApiControllers.Service
         [HttpGet, Route("exist")]
         public async Task<IHttpActionResult> Exist([FromUri] TFilter filter)
         {
-            var exist = await service.Value.ExistAsync(filter);
+            var exist = await facade.Value.Exist(filter);
             return Ok(exist);
         }
 
@@ -79,7 +76,7 @@ namespace Common.MVC.ApiControllers.Service
         [HttpGet, Route("count")]
         public async Task<IHttpActionResult> Count([FromUri] TFilter filter)
         {
-            var count = await service.Value.CountAsync(filter);
+            var count = await facade.Value.Count(filter);
             return Ok(count);
         }
     }

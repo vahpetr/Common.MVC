@@ -4,26 +4,34 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Common.Extensions;
-using Common.Facades.Contract;
-using Common.Filters;
+using Common.Services.Contract;
 
-namespace Common.MVC.ApiControllers.Facade
+namespace Common.MVC.ApiControllers.Service
 {
     /// <summary>
     /// Базовый API контроллер редактирования.
     /// Полная поддержка RESTful
     /// </summary> 
-#if (!DEBUG)
-    [Authorize]
-#endif
-    public class EditApiController<TEntity, TFilter, TFacade> : ReadApiController<TEntity, TFilter, TFacade>
+    public class ServiceEditApiController<TEntity, TFilter, TReadService, TEditService> : ApiController
         where TEntity : class
-        where TFilter : BaseFilter
-        where TFacade : IFacade<TEntity, TFilter>
+        where TFilter : class
+        where TReadService : IReadService<TEntity, TFilter>
+        where TEditService : IEditService<TEntity>
     {
-        public EditApiController(Lazy<TFacade> facade)
-            : base(facade)
+        private readonly Lazy<TReadService> read;
+        protected readonly Lazy<TEditService> edit;
+        private readonly Lazy<ITransactionService> transaction;
+
+        /// <summary>
+        /// Разделитель составного первичного ключа
+        /// </summary>
+        public const char KeySplitter = '-';
+
+        public ServiceEditApiController(Lazy<TReadService> read, Lazy<TEditService> edit, Lazy<ITransactionService> transaction)
         {
+            this.read = read;
+            this.edit = edit;
+            this.transaction = transaction;
         }
 
         /// <summary>
@@ -36,7 +44,15 @@ namespace Common.MVC.ApiControllers.Facade
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            await facade.Value.Add(entity);
+            transaction.Value.Begin();
+
+            await Task.Run(() =>
+            {
+                edit.Value.Add(entity);
+                edit.Value.Commit();
+            });
+
+            transaction.Value.Complete();
 
             var key = entity.GetKey();
             var id = string.Join(KeySplitter.ToString(), key);
@@ -58,12 +74,20 @@ namespace Common.MVC.ApiControllers.Facade
             if (!Equals(id, string.Join(KeySplitter.ToString(), key))) return BadRequest();
 
             // ReSharper disable once CoVariantArrayConversion
-            var dbEntity = await facade.Value.Get(key);
+            var dbEntity = await read.Value.GetAsync(key);
             if (dbEntity == null) return NotFound();
 
             try
             {
-                await facade.Value.Update(entity, dbEntity);
+                transaction.Value.Begin();
+
+                await Task.Run(() =>
+                {
+                    edit.Value.Update(entity, dbEntity);
+                    edit.Value.Commit();
+                });
+
+                transaction.Value.Complete();
             }
             catch (DBConcurrencyException)//DbUpdateConcurrencyException
             {
@@ -83,10 +107,18 @@ namespace Common.MVC.ApiControllers.Facade
         {
             // ReSharper disable once CoVariantArrayConversion
             object[] key = id.Split(KeySplitter);
-            var dbEntity = await facade.Value.Get(key);
+            var dbEntity = await read.Value.GetAsync(key);
             if (dbEntity == null) return NotFound();
 
-            await facade.Value.Remove(dbEntity);
+            transaction.Value.Begin();
+
+            await Task.Run(() =>
+            {
+                edit.Value.Remove(dbEntity);
+                edit.Value.Commit();
+            });
+
+            transaction.Value.Complete();
 
             return StatusCode(HttpStatusCode.NoContent);
         }
