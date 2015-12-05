@@ -20,37 +20,19 @@ namespace Common.MVC.ApiControllers.Service
         where TReadService : IReadService<TEntity, TFilter>
         where TEditService : IEditService<TEntity>
     {
-        /// <summary>
-        /// Разделитель составного первичного ключа
-        /// </summary>
-        protected const char KeySplitter = '-';
-
         private readonly Lazy<TEditService> _edit;
-        private readonly Lazy<TReadService> _read;
         private readonly Lazy<ITransactionService> _transaction;
 
         public ServiceRESTfulApiController(Lazy<TReadService> read, Lazy<TEditService> edit,
             Lazy<ITransactionService> transaction) : base(read)
         {
-            _read = read;
             _edit = edit;
             _transaction = transaction;
         }
 
-        protected TReadService read
-        {
-            get { return _read.Value; }
-        }
+        protected TEditService edit => _edit.Value;
 
-        protected TEditService edit
-        {
-            get { return _edit.Value; }
-        }
-
-        protected ITransactionService transaction
-        {
-            get { return _transaction.Value; }
-        }
+        protected ITransactionService transaction => _transaction.Value;
 
         /// <summary>
         /// Создать сушность
@@ -64,11 +46,9 @@ namespace Common.MVC.ApiControllers.Service
 
             transaction.Begin();
 
-            await Task.Run(() =>
-            {
-                edit.Add(entity);
-                edit.Commit();
-            });
+            //TODO пока поправил падение так, лучше нечего не придумал
+            edit.Add(entity);
+            await edit.CommitAsync();
 
             transaction.Complete();
 
@@ -91,6 +71,8 @@ namespace Common.MVC.ApiControllers.Service
             var key = entity.GetKey();
             if (!Equals(id, string.Join(KeySplitter.ToString(), key))) return BadRequest();
 
+            
+
             // ReSharper disable once CoVariantArrayConversion
             var dbEntity = await read.GetAsync(key);
             if (dbEntity == null) return NotFound();
@@ -98,12 +80,10 @@ namespace Common.MVC.ApiControllers.Service
             try
             {
                 transaction.Begin();
-
-                await Task.Run(() =>
-                {
-                    edit.Update(entity, dbEntity);
-                    edit.Commit();
-                });
+                
+                //TODO пока поправил падение так, лучше нечего не придумал
+                edit.Update(entity, dbEntity);
+                await edit.CommitAsync();
 
                 transaction.Complete();
             }
@@ -130,11 +110,9 @@ namespace Common.MVC.ApiControllers.Service
 
             transaction.Begin();
 
-            await Task.Run(() =>
-            {
-                edit.Remove(dbEntity);
-                edit.Commit();
-            });
+            //TODO пока поправил падение так, лучше нечего не придумал
+            edit.Remove(dbEntity);
+            await edit.CommitAsync();
 
             transaction.Complete();
 

@@ -80,20 +80,20 @@ namespace Common.MVC.ApiControllers.Repository
             if (!Equals(id, string.Join(KeySplitter.ToString(), key))) return BadRequest();
 
             // ReSharper disable once CoVariantArrayConversion
-            var exist = await read.ExistAsync(key);
-            if (!exist) return NotFound();
+            var dbEntity = await read.GetAsync(key);
+            if (dbEntity == null) return NotFound();
 
             try
             {
                 await Task.Run(() =>
                 {
-                    edit.Update(entity);
+                    edit.Update(entity, dbEntity);
                     edit.SaveChanges();
                 });
             }
             catch (DBConcurrencyException) //DbUpdateConcurrencyException
             {
-                return Content(HttpStatusCode.Conflict, exist);
+                return Content(HttpStatusCode.Conflict, dbEntity);
             }
 
             return Ok(entity);

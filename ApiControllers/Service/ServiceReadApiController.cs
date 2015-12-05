@@ -29,10 +29,7 @@ namespace Common.MVC.ApiControllers.Service
             _read = read;
         }
 
-        protected TReadService read
-        {
-            get { return _read.Value; }
-        }
+        protected TReadService read => _read.Value;
 
         /// <summary>
         /// Получить страницу сущностей
